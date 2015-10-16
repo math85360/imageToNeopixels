@@ -47,7 +47,8 @@ class UISetup {
   val mode = select(option(selected := "", value := "0", "RGB to [(r,g,b,length,p,", sub("0"), "...p", sub("length"), ")*]"),
     option(value := "1", "RGB to [byte_3r2g3b*]"),
     option(value := "2", "RGB to [(R,G,B)*]")).render
-  val paint_check = input(`type` := "checkbox").render
+  val paint_check = input(`type` := "checkbox", id := "paint_check").render
+  val fit_in_size = input(`type` := "checkbox", id := "fit_in_size",checked:="").render
   val paint_r = input(value := "0").render
   val paint_g = input(value := "0").render
   val paint_b = input(value := "0").render
@@ -65,7 +66,7 @@ class UISetup {
         div(
           arduino_preview,
           arduino_code),
-        div(mode, paint_check, paint_r, paint_g, paint_b)).render)
+        div(mode, fit_in_size, label(`for` := "fit_in_size", "fit"), paint_check, label(`for` := "paint_check", "paint on canvas"), label("Red .."), paint_r, label("Green .."), paint_g, label("Blue .."), paint_b)).render)
     dom.document.ondragenter = { (ev: dom.raw.DragEvent) =>
       ev.stopPropagation()
       ev.preventDefault()
@@ -153,11 +154,31 @@ class UISetup {
     setSize
     implicit val ctx = arduino_preview.getContext("2d").asInstanceOf[CanvasRenderingContext2D]
     //ctx.drawImage(img_preview, 0, 0, img_preview.naturalWidth, img_preview.naturalHeight, 0, 0, 60, 7)
-    ctx.drawImage(img_preview, 0, 0, arduino_preview.width, arduino_preview.height)
-    //val m = RGBto323Byte()
-    val m = getModeFrom()
-    ctx.putImageData(applyImageData(readImageData, m.apply), 0, 0)
-    arduino_code.value = m.toString()
+    ctx.fillStyle = "black"
+    ctx.fillRect(0, 0, arduino_preview.width, arduino_preview.height)
+    val w = img_preview.width.toDouble
+    val h = img_preview.height.toDouble
+    if (w > 0 && h > 0) {
+      val ratio = w / h
+      val maxw = arduino_preview.width
+      val maxh = arduino_preview.height
+      if (fit_in_size.checked)
+        ctx.drawImage(img_preview, 0, 0, maxw, maxh)
+      else if (ratio * maxh > maxw) {
+        //ctx.drawImage(img_preview, 0, 0, arduino_preview.width, arduino_preview.height)
+        dom.console.info(ratio + " " + maxw / ratio + " / " + maxh)
+        ctx.drawImage(img_preview, 0, 0, maxw / ratio, maxh)
+      } else {
+        dom.console.info(ratio + "x" + ratio * maxh + " / " + maxh)
+        ctx.drawImage(img_preview, 0, 0, ratio * maxh, maxh)
+      }
+      //if(ratio)
+      //dom.console.info(ratio)
+      //val m = RGBto323Byte()
+      val m = getModeFrom()
+      ctx.putImageData(applyImageData(readImageData, m.apply), 0, 0)
+      arduino_code.value = m.toString()
+    }
   }
   def readImageData(implicit ctx: CanvasRenderingContext2D) = ctx.getImageData(0, 0, arduino_preview.width, arduino_preview.height)
 
