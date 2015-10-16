@@ -1,0 +1,78 @@
+<classpath>
+  <classpathentry kind="src" path="src\main\scala-2.11"/>
+  <classpathentry kind="src" path="src\main\scala"/>
+  <classpathentry kind="src" path="src\main\java"/>
+  <classpathentry kind="src" path="src\main\resources"/>
+  <classpathentry kind="src" path="src\test\scala-2.11"/>
+  <classpathentry kind="src" path="src\test\scala"/>
+  <classpathentry kind="src" path="src\test\java"/>
+  <classpathentry kind="src" path="src\test\resources"/>
+  <classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\org.webjars\angularjs\srcs\angularjs-1.4.3-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\org.webjars\angularjs\jars\angularjs-1.4.3.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\org.webjars\angularjs\docs\angularjs-1.4.3-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="lib" path="C:\Users\mathi_000\.ivy2\cache\org.webjars\angular-material\jars\angular-material-0.10.1.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\org.webjars\angular-material\docs\angular-material-0.10.1-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\org.scala-js\scalajs-library_2.11\srcs\scalajs-library_2.11-0.6.5-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\org.scala-js\scalajs-library_2.11\jars\scalajs-library_2.11-0.6.5.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\org.scala-js\scalajs-library_2.11\docs\scalajs-library_2.11-0.6.5-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\org.scala-js\scalajs-dom_sjs0.6_2.11\srcs\scalajs-dom_sjs0.6_2.11-0.8.0-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\org.scala-js\scalajs-dom_sjs0.6_2.11\jars\scalajs-dom_sjs0.6_2.11-0.8.0.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\org.scala-js\scalajs-dom_sjs0.6_2.11\docs\scalajs-dom_sjs0.6_2.11-0.8.0-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\com.lihaoyi\scalatags_sjs0.6_2.11\srcs\scalatags_sjs0.6_2.11-0.5.2-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\com.lihaoyi\scalatags_sjs0.6_2.11\jars\scalatags_sjs0.6_2.11-0.5.2.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\com.lihaoyi\scalatags_sjs0.6_2.11\docs\scalatags_sjs0.6_2.11-0.5.2-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.scalacss\core_sjs0.6_2.11\srcs\core_sjs0.6_2.11-0.3.0-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.scalacss\core_sjs0.6_2.11\jars\core_sjs0.6_2.11-0.3.0.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.scalacss\core_sjs0.6_2.11\docs\core_sjs0.6_2.11-0.3.0-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.fork.scalaz\scalaz-core_sjs0.6_2.11\srcs\scalaz-core_sjs0.6_2.11-7.1.3-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.fork.scalaz\scalaz-core_sjs0.6_2.11\bundles\scalaz-core_sjs0.6_2.11-7.1.3.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.fork.scalaz\scalaz-core_sjs0.6_2.11\docs\scalaz-core_sjs0.6_2.11-7.1.3-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\org.scala-lang.modules\scala-parser-combinators_2.11\srcs\scala-parser-combinators_2.11-1.0.4-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\org.scala-lang.modules\scala-parser-combinators_2.11\bundles\scala-parser-combinators_2.11-1.0.4.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\org.scala-lang.modules\scala-parser-combinators_2.11\docs\scala-parser-combinators_2.11-1.0.4-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\org.scala-lang.modules\scala-xml_2.11\srcs\scala-xml_2.11-1.0.4-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\org.scala-lang.modules\scala-xml_2.11\bundles\scala-xml_2.11-1.0.4.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\org.scala-lang.modules\scala-xml_2.11\docs\scala-xml_2.11-1.0.4-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\com.chuusai\shapeless_sjs0.6_2.11\srcs\shapeless_sjs0.6_2.11-2.2.2-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\com.chuusai\shapeless_sjs0.6_2.11\bundles\shapeless_sjs0.6_2.11-2.2.2.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\com.chuusai\shapeless_sjs0.6_2.11\docs\shapeless_sjs0.6_2.11-2.2.2-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.scalacss\ext-scalatags_sjs0.6_2.11\srcs\ext-scalatags_sjs0.6_2.11-0.3.0-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.scalacss\ext-scalatags_sjs0.6_2.11\jars\ext-scalatags_sjs0.6_2.11-0.3.0.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\cache\com.github.japgolly.scalacss\ext-scalatags_sjs0.6_2.11\docs\ext-scalatags_sjs0.6_2.11-0.3.0-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\local\com.greencatsoft\scalajs-angular_sjs0.6_2.11\0.6-SNAPSHOT\srcs\scalajs-angular_sjs0.6_2.11-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\local\com.greencatsoft\scalajs-angular_sjs0.6_2.11\0.6-SNAPSHOT\jars\scalajs-angular_sjs0.6_2.11.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\local\com.greencatsoft\scalajs-angular_sjs0.6_2.11\0.6-SNAPSHOT\docs\scalajs-angular_sjs0.6_2.11-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry sourcepath="C:\Users\mathi_000\.ivy2\local\com.greencatsoft\scalajs-angular-macros_2.11\0.6-SNAPSHOT\srcs\scalajs-angular-macros_2.11-sources.jar" kind="lib" path="C:\Users\mathi_000\.ivy2\local\com.greencatsoft\scalajs-angular-macros_2.11\0.6-SNAPSHOT\jars\scalajs-angular-macros_2.11.jar">
+    <attributes>
+      <attribute name="javadoc_location" value="jar:file:C:\Users\mathi_000\.ivy2\local\com.greencatsoft\scalajs-angular-macros_2.11\0.6-SNAPSHOT\docs\scalajs-angular-macros_2.11-javadoc.jar!/"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+  <classpathentry kind="output" path="bin"/>
+</classpath>
