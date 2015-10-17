@@ -21,7 +21,7 @@ object Presentation extends StyleSheet.Inline {
 
   val row = mixin(display.flex, flex := "1", flexDirection.row)
   val rest = style(display.flex, flex := "1")
-  val body = style(unsafeRoot("BODY")(display.flex, flexDirection.row, margin.`0`, padding.`0`))
+  val body = style(unsafeRoot("BODY")(display.flex, flexDirection.row, margin.`0`, padding.`0`, height(100.vh)))
   val INPUT = style(unsafeRoot("INPUT")(border.`0`))
   val TEXTAREA = style(unsafeRoot("TEXTAREA")(border.`0`))
   val instructions = style(display.flex, borderBottom(1.px, solid, c"#AAAAAA"), backgroundColor(c"#FFFFE0"))

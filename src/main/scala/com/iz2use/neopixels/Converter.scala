@@ -56,6 +56,7 @@ class UISetup {
   val led_height = input(value := "7").render
   val pause = button(b("||"), disabled, onclick := (() => if (video_preview.paused) video_preview.play() else video_preview.pause())).render
   val camera = button("camera", onclick := (() => switchToCamera)).render
+  val testFirefox = button("test firefox", display.none, onclick := (() => switchToCamera2)).render
 
   setupUI
 
@@ -71,7 +72,8 @@ class UISetup {
                 li("Laisser fit coché si l'image doit remplir entièrement la zone"))),
             div(
               ol("start".attr := "3", li("Nombre de leds par ligne et par colonne modifiables en bas à droite"),
-                li("Glisser-déposer une image/video sur cette page")))),
+                li("Glisser-déposer une image/video sur cette page"))),
+            div(b("Vidéo : "), "Support de Chrome uniquement pour le moment")),
           div(
             img_preview,
             video_preview, arduino_preview),
@@ -86,7 +88,7 @@ class UISetup {
             label("Blue .."), paint_b,
             label("LEDS : "), led_width,
             label("x"), led_height,
-            pause, camera)))).render)
+            pause, camera, testFirefox)))).render)
     dom.document.ondragenter = { (ev: dom.raw.DragEvent) =>
       ev.stopPropagation()
       ev.preventDefault()
@@ -137,31 +139,110 @@ class UISetup {
     video_preview.style.display = "none"
   }
   def switchToCamera {
-    if (!video_preview.paused) video_preview.ended = true
+    if (!video_preview.paused) video_preview.src = ""
     var camId: String = ""
-    dom.console.info("goto camera")
-    dom.window.asInstanceOf[js.Dynamic].MediaStreamTrack.getSources({ (data: js.Array[js.Dynamic]) =>
+    //dom.console.info("goto camera")
+    getUserMedia(
+      js.Dynamic.literal(video = true, audio = false), { (stream: js.Any) =>
+        URL.foreach({ url =>
+          dom.window.setTimeout(() =>
+            startVideo(url.createObjectURL(stream).asInstanceOf[String]), 1000)
+        })
+      }, { () => })
+    /*dom.window.asInstanceOf[js.Dynamic].MediaStreamTrack.getSources({ (data: js.Array[js.Dynamic]) =>
       dom.console.info(data.mkString(","))
       for (x <- data) {
         if (x.kind == "video") {
           camId = x.id.asInstanceOf[String]
         }
       }
+      //if (dom.navigator.asInstanceOf[js.Dynamic].webkitGetUserMedia != js.undefined)
       dom.navigator.asInstanceOf[js.Dynamic].webkitGetUserMedia(
-          js.Dynamic.literal(video = js.Dynamic.literal(optional = js.Array(js.Dynamic.literal(sourceId = camId)))), { (stream: js.Any) =>
-        dom.window.setTimeout(() => startVideo(dom.window.asInstanceOf[js.Dynamic].webkitURL.createObjectURL(stream).asInstanceOf[String]), 1000)
-      }, { () => })
+        js.Dynamic.literal(video = js.Dynamic.literal(optional = js.Array(js.Dynamic.literal(sourceId = camId)))), { (stream: js.Any) =>
+          dom.window.setTimeout(() => startVideo(dom.window.asInstanceOf[js.Dynamic].webkitURL.createObjectURL(stream).asInstanceOf[String]), 1000)
+        }, { () => })
+      //else if (dom.navigator.asInstanceOf[js.Dynamic].mozGetUserMedia != js.undefined) {
+      //dom.navigator.asInstanceOf[js.Dynamic].mozGetUserMedia(
+      //js.Dynamic.literal(video = js.Dynamic.literal(optional = js.Array(js.Dynamic.literal(sourceId = camId)))), { (stream: js.Any) =>
+      //dom.window.setTimeout(() => startVideo(dom.window.asInstanceOf[js.Dynamic].URL.createObjectURL(stream).asInstanceOf[String]), 1000)
+      //}, { () => })
+      //}
+    })*/
+  }
+  def switchToCamera2 {
+    if (!video_preview.paused) video_preview.src = ""
+    var camId: String = ""
+    //dom.console.info("goto camera")
+    dom.window.asInstanceOf[js.Dynamic].MediaStreamTrack.getSources({ (data: js.Array[js.Dynamic]) =>
+      //dom.console.info(data.mkString(","))
+      for (x <- data) {
+        if (x.kind == "video") {
+          camId = x.id.asInstanceOf[String]
+        }
+      }
+      //if (getUserMedia != js.undefined) {
+      getUserMedia(
+        js.Dynamic.literal(video = js.Dynamic.literal(optional = js.Array(js.Dynamic.literal(sourceId = camId)))),
+        { (stream: js.Any) =>
+          URL.foreach({ url =>
+            dom.window.setTimeout(() =>
+              startVideo(url.createObjectURL(stream)), 1000)
+          })
+        },
+        { () => })
+      //}
     })
   }
 
   def startVideo(src: String) {
     pause.disabled = false
     video_preview.src = src
-    video_preview.style.display = "initial"
-    dom.window.requestAnimationFrame((x: Double) => drawVideo(x))
+    img_preview.style.display = "none"
+    video_preview.style.display = "inline-block"
+    requestAnimationFrame((x: Double) => drawVideo(x))
     //video_preview.onended = ((ev: dom.raw.Event) => dom.window.cancelAnimationFrame(interval))
     video_preview.play()
   }
+  val reqAF = {
+    val r = Seq("requestAnimationFrame", "mozRequestAnimationFrame")
+      .map({ x =>
+
+        //dom.console.info(x + " " + js.Object.hasProperty(w, x))
+        x
+      })
+      .find(js.Object.hasProperty(dom.window, _))
+      .map(dom.window.asInstanceOf[js.Dynamic].selectDynamic(_))
+    r
+  }
+  def requestAnimationFrame(callback: js.Function1[Double, _]) {
+    reqAF
+      .foreach(_(callback))
+  }
+  val _UserMedia = {
+    val r = Seq("getUserMedia", "webkitGetUserMedia", "mozGetUserMedia", "msGetUserMedia")
+      .find(js.Object.hasProperty(dom.navigator, _))
+      .map(dom.navigator.asInstanceOf[js.Dynamic].selectDynamic(_))
+    r
+  }
+  def getUserMedia(data: js.Any, callback: js.Function1[js.Any, _], error: js.Function0[_]) {
+    _UserMedia
+      .foreach(_.call(dom.navigator, data, callback, error))
+    //if(nav.getUserMedia!=js.undefined) nav.getUserMedia(data,callback,error)
+    //else if (nav.webkitGetUserMedia == js.undefined)  nav.webkitGetUserMedia(data,callback,error)
+    //else if (nav.mozGetUserMedia == js.undefined) nav.mozGetUserMedia(data,callback,error)
+    //else if (nav.msGetUserMedia == js.undefined)  nav.msGetUserMedia(data,callback,error)
+  }
+  val _URL = {
+    //val w = dom.window.asInstanceOf[js.Dictionary[js.UndefOr[Nothing]]]
+    val r = Seq("URL", "webkitURL")
+      .find(js.Object.hasProperty(dom.window, _))
+      .map(dom.window.asInstanceOf[js.Dynamic].selectDynamic(_).asInstanceOf[WindowURL]) //.getOrElse(null)
+    r
+  }
+  lazy val URL = {
+    _URL
+  }
+
   def handleFiles(files: FileList) {
     clear()
     if (files.length > 0) {
@@ -171,7 +252,8 @@ class UISetup {
         reader.onload = { (ev: UIEvent) =>
           pause.disabled = true
           img_preview.src = ev.target.asInstanceOf[js.Dynamic].result.asInstanceOf[String]
-          img_preview.style.display = "initial"
+          img_preview.style.display = "inline-block"
+          video_preview.style.display = "inline-block"
           dom.window.setTimeout(() => drawImage, 0)
         }
       } else if (file.`type`.startsWith("video")) {
@@ -185,7 +267,7 @@ class UISetup {
 
   def drawVideo(x: Double) {
     drawImage
-    if (!video_preview.ended) dom.window.requestAnimationFrame((x: Double) => drawVideo(x))
+    if (!video_preview.ended) requestAnimationFrame((x: Double) => drawVideo(x))
   }
   def drawImage {
     setSize
@@ -208,10 +290,10 @@ class UISetup {
         ctx.drawImage(src, 0, 0, maxw, maxh)
       else if (ratio * maxh > maxw) {
         //ctx.drawImage(img_preview, 0, 0, arduino_preview.width, arduino_preview.height)
-        dom.console.info(ratio + " " + maxw / ratio + " / " + maxh)
+        //dom.console.info(ratio + " " + maxw / ratio + " / " + maxh)
         ctx.drawImage(src, 0, 0, maxw / ratio, maxh)
       } else {
-        dom.console.info(ratio + "x" + ratio * maxh + " / " + maxh)
+        //dom.console.info(ratio + "x" + ratio * maxh + " / " + maxh)
         ctx.drawImage(src, 0, 0, ratio * maxh, maxh)
       }
       //if(ratio)
@@ -271,7 +353,7 @@ class UISetup {
         i += 1
       }
     }
-    //arduino_code.value = 
+    //arduino_code.value =
     //for(var i = 0 to arr.)
     arr
   }
