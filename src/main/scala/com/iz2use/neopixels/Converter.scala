@@ -48,10 +48,12 @@ class UISetup {
     option(value := "1", "RGB to [byte_3r2g3b*]"),
     option(value := "2", "RGB to [(R,G,B)*]")).render
   val paint_check = input(`type` := "checkbox", id := "paint_check").render
-  val fit_in_size = input(`type` := "checkbox", id := "fit_in_size",checked:="").render
+  val fit_in_size = input(`type` := "checkbox", id := "fit_in_size", checked := "").render
   val paint_r = input(value := "0").render
   val paint_g = input(value := "0").render
   val paint_b = input(value := "0").render
+  val led_width = input(value := "60").render
+  val led_height = input(value := "7").render
 
   setupUI
 
@@ -59,14 +61,29 @@ class UISetup {
     //GlobalRegistry.register(Presentation)
     dom.document.head.appendChild(Presentation.render[TypedTag[HTMLStyleElement]].render)
     dom.document.body.appendChild(
-      div(
-        div(
-          img_preview,
-          video_preview),
-        div(
-          arduino_preview,
-          arduino_code),
-        div(mode, fit_in_size, label(`for` := "fit_in_size", "fit"), paint_check, label(`for` := "paint_check", "paint on canvas"), label("Red .."), paint_r, label("Green .."), paint_g, label("Blue .."), paint_b)).render)
+      div(Presentation.main,
+        div(Presentation.content,
+          div(Presentation.instructions,
+            div(
+              ol(li("Choisir un mode en bas à gauche"),
+                li("Laisser fit coché si l'image doit remplir entièrement la zone"))),
+            div(
+              ol(li("Nombre de leds par ligne et par colonne modifiables en bas à droite"),
+                li("Glisser-déposer une image sur cette page")))),
+          div(
+            img_preview,
+            video_preview, arduino_preview),
+          div(Presentation.line,
+            arduino_code),
+          div(Presentation.toolbox, div(Presentation.toolwrapper,
+            mode,
+            fit_in_size, label(`for` := "fit_in_size", "fit"),
+            paint_check, label(`for` := "paint_check", "paint on canvas"),
+            label("Red .."), paint_r,
+            label("Green .."), paint_g,
+            label("Blue .."), paint_b,
+            label("LEDS : "), led_width,
+            label("x"), led_height)))).render)
     dom.document.ondragenter = { (ev: dom.raw.DragEvent) =>
       ev.stopPropagation()
       ev.preventDefault()
@@ -110,6 +127,7 @@ class UISetup {
         arr.data(2) = paint_b.value.toInt
         arr.data(3) = 255
         ctx.putImageData(arr, x, y)
+        implicit val row_count = led_height.value.toInt
         val m = getModeFrom()
         ctx.putImageData(applyImageData(readImageData, m.apply), 0, 0)
         arduino_code.value = m.toString()
@@ -138,13 +156,13 @@ class UISetup {
         //img_preview.file = file
         reader.onload = { (ev: UIEvent) =>
           img_preview.src = ev.target.asInstanceOf[js.Dynamic].result.asInstanceOf[String]
-          img_preview.style.display = "inherit"
+          img_preview.style.display = "initial"
           dom.window.setTimeout(() => drawImage, 0)
         }
       } else if (file.`type`.startsWith("video")) {
         reader.onload = { (ev: UIEvent) =>
           video_preview.src = ev.target.asInstanceOf[js.Dynamic].result.asInstanceOf[String]
-          video_preview.style.display = "inherit"
+          video_preview.style.display = "initial"
         }
       }
       reader.readAsDataURL(file)
@@ -175,6 +193,7 @@ class UISetup {
       //if(ratio)
       //dom.console.info(ratio)
       //val m = RGBto323Byte()
+      implicit val row_count = led_height.value.toInt
       val m = getModeFrom()
       ctx.putImageData(applyImageData(readImageData, m.apply), 0, 0)
       arduino_code.value = m.toString()
@@ -183,8 +202,8 @@ class UISetup {
   def readImageData(implicit ctx: CanvasRenderingContext2D) = ctx.getImageData(0, 0, arduino_preview.width, arduino_preview.height)
 
   def setSize {
-    arduino_preview.width = 60
-    arduino_preview.height = 7
+    arduino_preview.width = led_width.value.toInt
+    arduino_preview.height = led_height.value.toInt
     arduino_preview.style.width = (arduino_preview.width * 10).px
     arduino_preview.style.height = (arduino_preview.height * 10).px
   }
@@ -194,6 +213,7 @@ class UISetup {
     val txt = arduino_code.value.filterNot("{}; \r\n\t\u00A0".contains(_)).split(",").filter(_.trim().length != 0).map(_.toInt)
     val vec = Vector() ++ txt
     //dom.console.info(vec.mkString("[", ", ", "]"))
+    implicit val row_count = led_height.value.toInt
     val m = getModeFrom(vec)
     ctx.fillStyle = "black"
     ctx.fillRect(0, 0, arduino_preview.width, arduino_preview.height)
@@ -201,7 +221,7 @@ class UISetup {
 
   }
 
-  def getModeFrom(result: Vector[Int] = Vector()): Transform =
+  def getModeFrom(result: Vector[Int] = Vector())(implicit row_count: Int): Transform =
     mode.value.toInt match {
       case 0 => RGBToSameColorLength(result)
       case 1 => RGBto323Byte(result)
@@ -220,7 +240,7 @@ class UISetup {
     def unapply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int)
   }
 
-  case class RGBToSameColorLength(var result: Vector[Int] = Vector()) extends Transform {
+  case class RGBToSameColorLength(var result: Vector[Int] = Vector())(implicit row_count: Int) extends Transform {
     var trsf = {
       val pixels = Array.fill(arduino_preview.width * arduino_preview.height)((0, 0, 0))
       if (result.length > 0) {
@@ -233,9 +253,9 @@ class UISetup {
           val cnt = result(i)
           for (p <- 0 until cnt) {
             val v = result(i + p + 1)
-            val x = v / 7
-            val y = v % 7
-            pixels(x * 7 + y) = lastColor
+            val x = v / row_count
+            val y = v % row_count
+            pixels(x * row_count + y) = lastColor
           }
           i += 4 + cnt
         }
@@ -247,12 +267,12 @@ class UISetup {
     def apply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int) {
       val color = (arr.data(p + 0), arr.data(p + 1), arr.data(p + 2))
       if (color != black) {
-        val pos = x * 7 + (6 - y)
+        val pos = x * row_count + (row_count - 1 - y)
         map = map + (color -> (map.get(color).getOrElse(Vector()) :+ pos))
       }
     }
     def unapply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int) {
-      val pos = x * 7 + (6 - y)
+      val pos = x * row_count + (row_count - 1 - y)
       if (trsf.length > pos) {
         arr.data(p + 0) = trsf(pos)._1
         arr.data(p + 1) = trsf(pos)._2
