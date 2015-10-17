@@ -54,6 +54,8 @@ class UISetup {
   val paint_b = input(value := "0").render
   val led_width = input(value := "60").render
   val led_height = input(value := "7").render
+  val pause = button(b("||"), disabled, onclick := (() => if (video_preview.paused) video_preview.play() else video_preview.pause())).render
+  val camera = button("camera", onclick := (() => switchToCamera)).render
 
   setupUI
 
@@ -68,8 +70,8 @@ class UISetup {
               ol(li("Choisir un mode en bas à gauche"),
                 li("Laisser fit coché si l'image doit remplir entièrement la zone"))),
             div(
-              ol(li("Nombre de leds par ligne et par colonne modifiables en bas à droite"),
-                li("Glisser-déposer une image sur cette page")))),
+              ol("start".attr := "3", li("Nombre de leds par ligne et par colonne modifiables en bas à droite"),
+                li("Glisser-déposer une image/video sur cette page")))),
           div(
             img_preview,
             video_preview, arduino_preview),
@@ -83,7 +85,8 @@ class UISetup {
             label("Green .."), paint_g,
             label("Blue .."), paint_b,
             label("LEDS : "), led_width,
-            label("x"), led_height)))).render)
+            label("x"), led_height,
+            pause, camera)))).render)
     dom.document.ondragenter = { (ev: dom.raw.DragEvent) =>
       ev.stopPropagation()
       ev.preventDefault()
@@ -112,39 +115,52 @@ class UISetup {
       val y = (ev.clientY - arduino_preview.offsetTop) / 10
       implicit val ctx = arduino_preview.getContext("2d").asInstanceOf[CanvasRenderingContext2D]
       val arr = ctx.getImageData(x, y, 1, 1)
-      //dom.console.info(ev.buttons)
       if ((ev.buttons == 0) && !paint_check.checked) {
         paint_r.value = arr.data(0).toString
         paint_g.value = arr.data(1).toString
         paint_b.value = arr.data(2).toString
-        //arr.data(0) = 255
-        //arr.data(1) = 255
-        //arr.data(2) = 255
       } else if ((ev.buttons == 1) && paint_check.checked) {
-        //dom.console.info("hhh")
         arr.data(0) = paint_r.value.toInt
         arr.data(1) = paint_g.value.toInt
         arr.data(2) = paint_b.value.toInt
         arr.data(3) = 255
         ctx.putImageData(arr, x, y)
-        implicit val row_count = led_height.value.toInt
+        implicit val size = Size(led_width.value.toInt, led_height.value.toInt)
         val m = getModeFrom()
         ctx.putImageData(applyImageData(readImageData, m.apply), 0, 0)
         arduino_code.value = m.toString()
       }
     }
-    /*import all._
-    val html = div(
-      md.flex.default,
-      ng.App := "ConverterApp",
-      ng.Controller := "ConverterController",
-      div(img(ng.If := ""), video(ng.If := ""),
-        canvas())).render
-    dom.document.body.insertAdjacentHTML("beforeEnd", html)*/
   }
   def clear() {
     img_preview.style.display = "none"
     video_preview.style.display = "none"
+  }
+  def switchToCamera {
+    if (!video_preview.paused) video_preview.ended = true
+    var camId: String = ""
+    dom.console.info("goto camera")
+    dom.window.asInstanceOf[js.Dynamic].MediaStreamTrack.getSources({ (data: js.Array[js.Dynamic]) =>
+      dom.console.info(data.mkString(","))
+      for (x <- data) {
+        if (x.kind == "video") {
+          camId = x.id.asInstanceOf[String]
+        }
+      }
+      dom.navigator.asInstanceOf[js.Dynamic].webkitGetUserMedia(
+          js.Dynamic.literal(video = js.Dynamic.literal(optional = js.Array(js.Dynamic.literal(sourceId = camId)))), { (stream: js.Any) =>
+        dom.window.setTimeout(() => startVideo(dom.window.asInstanceOf[js.Dynamic].webkitURL.createObjectURL(stream).asInstanceOf[String]), 1000)
+      }, { () => })
+    })
+  }
+
+  def startVideo(src: String) {
+    pause.disabled = false
+    video_preview.src = src
+    video_preview.style.display = "initial"
+    dom.window.requestAnimationFrame((x: Double) => drawVideo(x))
+    //video_preview.onended = ((ev: dom.raw.Event) => dom.window.cancelAnimationFrame(interval))
+    video_preview.play()
   }
   def handleFiles(files: FileList) {
     clear()
@@ -152,21 +168,24 @@ class UISetup {
       val file = files.item(0)
       val reader = new FileReader()
       if (file.`type`.startsWith("image")) {
-        //val image = img()
-        //img_preview.file = file
         reader.onload = { (ev: UIEvent) =>
+          pause.disabled = true
           img_preview.src = ev.target.asInstanceOf[js.Dynamic].result.asInstanceOf[String]
           img_preview.style.display = "initial"
           dom.window.setTimeout(() => drawImage, 0)
         }
       } else if (file.`type`.startsWith("video")) {
         reader.onload = { (ev: UIEvent) =>
-          video_preview.src = ev.target.asInstanceOf[js.Dynamic].result.asInstanceOf[String]
-          video_preview.style.display = "initial"
+          startVideo(ev.target.asInstanceOf[js.Dynamic].result.asInstanceOf[String])
         }
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  def drawVideo(x: Double) {
+    drawImage
+    if (!video_preview.ended) dom.window.requestAnimationFrame((x: Double) => drawVideo(x))
   }
   def drawImage {
     setSize
@@ -174,26 +193,31 @@ class UISetup {
     //ctx.drawImage(img_preview, 0, 0, img_preview.naturalWidth, img_preview.naturalHeight, 0, 0, 60, 7)
     ctx.fillStyle = "black"
     ctx.fillRect(0, 0, arduino_preview.width, arduino_preview.height)
-    val w = img_preview.width.toDouble
-    val h = img_preview.height.toDouble
+    val (src, w, h) =
+      if (video_preview.style.display == "none")
+        (img_preview, img_preview.width.toDouble, img_preview.height.toDouble)
+      else
+        (video_preview, video_preview.offsetWidth.toDouble, video_preview.offsetHeight.toDouble)
+    //val w = img_preview.width.toDouble
+    //val h = img_preview.height.toDouble
     if (w > 0 && h > 0) {
       val ratio = w / h
       val maxw = arduino_preview.width
       val maxh = arduino_preview.height
       if (fit_in_size.checked)
-        ctx.drawImage(img_preview, 0, 0, maxw, maxh)
+        ctx.drawImage(src, 0, 0, maxw, maxh)
       else if (ratio * maxh > maxw) {
         //ctx.drawImage(img_preview, 0, 0, arduino_preview.width, arduino_preview.height)
         dom.console.info(ratio + " " + maxw / ratio + " / " + maxh)
-        ctx.drawImage(img_preview, 0, 0, maxw / ratio, maxh)
+        ctx.drawImage(src, 0, 0, maxw / ratio, maxh)
       } else {
         dom.console.info(ratio + "x" + ratio * maxh + " / " + maxh)
-        ctx.drawImage(img_preview, 0, 0, ratio * maxh, maxh)
+        ctx.drawImage(src, 0, 0, ratio * maxh, maxh)
       }
       //if(ratio)
       //dom.console.info(ratio)
       //val m = RGBto323Byte()
-      implicit val row_count = led_height.value.toInt
+      implicit val size = Size(led_width.value.toInt, led_height.value.toInt)
       val m = getModeFrom()
       ctx.putImageData(applyImageData(readImageData, m.apply), 0, 0)
       arduino_code.value = m.toString()
@@ -213,7 +237,7 @@ class UISetup {
     val txt = arduino_code.value.filterNot("{}; \r\n\t\u00A0".contains(_)).split(",").filter(_.trim().length != 0).map(_.toInt)
     val vec = Vector() ++ txt
     //dom.console.info(vec.mkString("[", ", ", "]"))
-    implicit val row_count = led_height.value.toInt
+    implicit val size = Size(led_width.value.toInt, led_height.value.toInt)
     val m = getModeFrom(vec)
     ctx.fillStyle = "black"
     ctx.fillRect(0, 0, arduino_preview.width, arduino_preview.height)
@@ -221,7 +245,7 @@ class UISetup {
 
   }
 
-  def getModeFrom(result: Vector[Int] = Vector())(implicit row_count: Int): Transform =
+  def getModeFrom(result: Vector[Int] = Vector())(implicit size: Size): Transform =
     mode.value.toInt match {
       case 0 => RGBToSameColorLength(result)
       case 1 => RGBto323Byte(result)
@@ -235,108 +259,6 @@ class UISetup {
 
   // Color, Length, x0, x1, x2, x3, xlength
 
-  trait Transform {
-    def apply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int)
-    def unapply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int)
-  }
-
-  case class RGBToSameColorLength(var result: Vector[Int] = Vector())(implicit row_count: Int) extends Transform {
-    var trsf = {
-      val pixels = Array.fill(arduino_preview.width * arduino_preview.height)((0, 0, 0))
-      if (result.length > 0) {
-        var lastColor = (0, 0, 0)
-        var length = -3
-        var i = 3;
-        val len = result.length - 1
-        while (i < len) {
-          lastColor = (result(i - 3), result(i - 2), result(i - 1))
-          val cnt = result(i)
-          for (p <- 0 until cnt) {
-            val v = result(i + p + 1)
-            val x = v / row_count
-            val y = v % row_count
-            pixels(x * row_count + y) = lastColor
-          }
-          i += 4 + cnt
-        }
-      }
-      pixels
-    }
-    var map: Map[(Int, Int, Int), Vector[Int]] = Map()
-    val black = (0, 0, 0)
-    def apply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int) {
-      val color = (arr.data(p + 0), arr.data(p + 1), arr.data(p + 2))
-      if (color != black) {
-        val pos = x * row_count + (row_count - 1 - y)
-        map = map + (color -> (map.get(color).getOrElse(Vector()) :+ pos))
-      }
-    }
-    def unapply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int) {
-      val pos = x * row_count + (row_count - 1 - y)
-      if (trsf.length > pos) {
-        arr.data(p + 0) = trsf(pos)._1
-        arr.data(p + 1) = trsf(pos)._2
-        arr.data(p + 2) = trsf(pos)._3
-      }
-    }
-    override def toString() = map.map(p => Seq(p._1._1, p._1._2, p._1._3, p._2.length) ++ p._2).flatten.mkString("{", ",", "}")
-  }
-
-  case class RGB(var result: Vector[Int] = Vector()) extends Transform {
-
-    def apply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int) {
-      result = result :+ arr.data(p + 0)
-      result = result :+ arr.data(p + 1)
-      result = result :+ arr.data(p + 2)
-    }
-    def unapply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int) {
-      if (result.length / 3 > offset) {
-        arr.data(p + 0) = result(offset * 3 + 0)
-        arr.data(p + 1) = result(offset * 3 + 1)
-        arr.data(p + 2) = result(offset * 3 + 2)
-      }
-    }
-    override def toString() = result.mkString("{", ",", "}")
-  }
-  case class RGBto323Byte(var result: Vector[Int] = Vector()) extends Transform {
-
-    def apply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int) {
-      val r = (arr.data(p + 0) >> 5)
-      val g = (arr.data(p + 1) >> 6)
-      val b = (arr.data(p + 2) >> 5)
-      //arr.data(p + 0) = (i / 60) * 4
-      //arr.data(p + 1) = y * 40
-      //arr.data(p + 2) = 0
-      //arr.data(p + 3) = 0
-      arr.data(p + 0) = r << 5
-      arr.data(p + 1) = g << 6
-      arr.data(p + 2) = b << 5
-      val color = (r << 5) | (g << 3) | b
-
-      //yield color
-      //result = result :+ (x + 1) * 1000 + y
-      result = result :+ color
-    }
-    //def unapply(arr: Seq[Int]) {
-
-    //}
-
-    def unapply(arr: ImageData, p: Int, offset: Int, x: Int, y: Int) {
-      if (result.length > offset) {
-        val color = result(offset)
-        arr.data(p + 0) = (7 & (color >> 5)) << 5
-        arr.data(p + 1) = (3 & (color >> 3)) << 6
-        arr.data(p + 2) = (7 & (color >> 0)) << 5
-        //if (offset == 0)
-        //dom.console.info(color + " : " + arr.data(p + 0) + ", " + arr.data(p + 1) + ", " + arr.data(p + 2))
-        //} else {
-        //arr.data(p + 0) = 127
-        //arr.data(p + 1) = 127
-        //arr.data(p + 2) = 127
-      }
-    }
-    override def toString() = result.mkString("{", ",", "}")
-  }
   def applyImageData(arr: ImageData, f: (ImageData, Int, Int, Int, Int) => Unit) = {
     val w = arr.width
     val h = arr.height
